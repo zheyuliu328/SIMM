@@ -1,0 +1,69 @@
+{
+  "snapshot_date": "2026-02-08",
+  "gateway_status": "running",
+  "repos": {
+    "credit-one": {
+      "path": "~/Documents/GitHub/credit-one",
+      "branch": "master",
+      "commit": "d8c59399cb0cded0bf21c2b6f62f97e7a7fa7888",
+      "ci_latest": {
+        "run_id": "21792280152",
+        "name": "CI",
+        "status": "completed",
+        "conclusion": "failure"
+      },
+      "security_latest": {
+        "run_id": "21792280160",
+        "name": "Security",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    },
+    "fct": {
+      "path": "~/Documents/GitHub/fct",
+      "branch": "master",
+      "commit": "e269f07840c3489c8954f7ab7ad4a59dad2538cf",
+      "ci_latest": {
+        "run_id": "21792898964",
+        "name": "CI Pipeline",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "security_latest": {
+        "run_id": "21792898957",
+        "name": "Security",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    },
+    "nlp-factor": {
+      "path": "~/Documents/GitHub/nlp-factor",
+      "branch": "master",
+      "commit": "85592376490464b07ff6b1437159c9f674c509f2",
+      "ci_latest": {
+        "run_id": "21794298565",
+        "name": "CI",
+        "status": "completed",
+        "conclusion": "failure"
+      },
+      "security_latest": {
+        "run_id": "21794298547",
+        "name": "Security",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    }
+  },
+  "failures": {
+    "credit-one": {
+      "category": "A) Lint/Format",
+      "cause": "ruff UP035/UP006 - typing.Dict deprecated, use dict",
+      "files": ["config/validator.py", "src/credit_one/app.py"]
+    },
+    "nlp-factor": {
+      "category": "A) Lint/Format",
+      "cause": "ruff UP035/UP006 + E501 line too long",
+      "files": ["scripts/make_social_preview.py", "src/analysis/factor_corr.py"]
+    }
+  }
+}

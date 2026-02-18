@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-02-08T12:30:00+08:00",
+  "requester": "main",
+  "allowAny": true,
+  "agents": [
+    {"id": "main", "configured": true},
+    {"id": "alpha", "configured": true},
+    {"id": "beta", "configured": true},
+    {"id": "gamma", "configured": true}
+  ],
+  "status": "all_configured"
+}
