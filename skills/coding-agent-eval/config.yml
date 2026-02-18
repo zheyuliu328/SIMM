@@ -1,0 +1,51 @@
+# Evaluation Suite Configuration
+
+suites:
+  all:
+    description: "All available tasks"
+    tasks:
+      - feature_addition_1
+      - integration_feature_2
+      - regression_protection
+  
+  regression:
+    description: "Regression protection tasks"
+    tasks:
+      - regression_protection
+  
+  feature:
+    description: "Feature addition tasks"
+    tasks:
+      - feature_addition_1
+  
+  integration:
+    description: "Integration tasks"
+    tasks:
+      - integration_feature_2
+
+thresholds:
+  feature_addition:
+    pass_at_1: 0.60
+    pass_at_5: 0.25
+  
+  integration:
+    pass_at_1: 0.50
+    pass_at_5: 0.20
+  
+  regression:
+    pass_at_1: 0.80
+    pass_at_5: 0.40
+
+agents:
+  claude:
+    command: "claude"
+    timeout: 600
+  
+  codex:
+    command: "codex exec"
+    timeout: 300
+
+reporting:
+  format: "json"
+  include_logs: true
+  include_artifacts: true

@@ -1,0 +1,68 @@
+# Model-Based Grader Configuration
+# Uses LLM to evaluate code quality against rubric
+
+grader_type: "model_rubric"
+description: "LLM evaluation with structured rubric"
+
+model:
+  provider: "anthropic"
+  model: "claude-sonnet-4-20250514"
+  temperature: 0.1
+  max_tokens: 2000
+
+rubric_template: |
+  You are evaluating code against a specification.
+  
+  Task: {task_desc}
+  Specification: {spec}
+  
+  Code to evaluate:
+  ```{language}
+  {code}
+  ```
+  
+  Checklist:
+  {checklist}
+  
+  Evaluate each item:
+  1. Does the implementation match the spec? [YES/NO/PARTIAL]
+  2. Are edge cases handled? [YES/NO/UNKNOWN]
+  3. Is the code idiomatic? [YES/NO]
+  4. Are there security concerns? [YES/NO]
+  
+  Return JSON:
+  {{
+    "overall": "PASS | FAIL | UNKNOWN",
+    "confidence": "high | medium | low",
+    "checks": {{
+      "spec_match": "...",
+      "edge_cases": "...",
+      "idiomatic": "...",
+      "security": "..."
+    }},
+    "reasoning": "brief explanation"
+  }}
+
+scoring:
+  thresholds:
+    PASS: "spec_match == YES AND edge_cases != NO"
+    FAIL: "spec_match == NO"
+    UNKNOWN: "confidence < medium"
+  
+  confidence_rules:
+    high: "All checks clear, unambiguous"
+    medium: "Some partial matches or minor concerns"
+    low: "Ambiguous, needs human review"
+
+fallback:
+  # When to escalate to human
+  conditions:
+    - "confidence == low"
+    - "security == YES"  # security concerns
+    - "overall == UNKNOWN"
+  
+  action: "queue_for_human_review"
+
+output:
+  format: "json"
+  include_reasoning: true

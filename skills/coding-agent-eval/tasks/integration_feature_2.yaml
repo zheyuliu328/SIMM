@@ -1,0 +1,42 @@
+id: "integration_feature_2"
+desc: "Integrate feature flags for two new modules and update tests"
+category: "integration"
+difficulty: "medium"
+env:
+  repo_url: "https://github.com/openclaw/eval-template-python.git"
+  branch: "main"
+  setup_cmd: |
+    pip install -r requirements.txt
+    pip install flask-unleash
+task_input:
+  spec: |
+    Integrate feature flags for two new modules:
+    
+    1. Module A: New payment gateway
+       - Feature flag: "payment_v2"
+       - When enabled, use new Stripe integration
+       - When disabled, use legacy PayPal
+    
+    2. Module B: Enhanced analytics
+       - Feature flag: "analytics_v2"
+       - When enabled, send events to Segment
+       - When disabled, skip analytics
+    
+    Requirements:
+    - Use Flask-Unleash for feature flags
+    - Unit tests for both enabled/disabled states
+    - Integration tests for flag transitions
+success_criteria:
+  code_based:
+    run_tests: ["test_feature_flag_payment.py", "test_feature_flag_analytics.py", "test_integration.py"]
+    static_analysis: ["mypy", "bandit"]
+  model_rubric:
+    - "Verify feature flag abstraction is clean"
+    - "Check if all code paths are tested"
+    - "Ensure graceful degradation when flags disabled"
+  human: false
+trials:
+  count: 5
+  stop_on_success: false
+  max_duration: 600
+timeout: 1200
