@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SIMM Kick-off Slide 2 v2</title>
+<style>
+:root{--ink:#0f172a;--muted:#475569;--line:#cbd5e1;--g:#166534;--b:#0b3b66}
+html,body{margin:0;background:#fff;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink)}
+.slide{width:1366px;height:768px;box-sizing:border-box;margin:0 auto;padding:16px 20px 14px;display:grid;grid-template-rows:auto auto 1fr auto;gap:8px}
+h1{margin:0;font-size:28px;line-height:1.05;color:var(--b)}
+.sub{font-size:12px;color:var(--muted)}
+.banner{border:1px solid var(--line);border-left:5px solid var(--b);background:#f8fbff;padding:6px 8px;font-size:12px;line-height:1.2}
+.grid{display:grid;grid-template-columns:34% 66%;gap:8px;min-height:0}
+.card{border:1px solid var(--line);padding:8px;min-height:0}
+.card h2{margin:0 0 4px;font-size:16px;color:#1e293b}
+.left ul{margin:0;padding-left:16px}.left li{font-size:12px;line-height:1.18;margin:2px 0}
+.right{display:grid;grid-template-rows:1fr 1fr;gap:8px}
+.sec{border:1px solid var(--line);padding:6px}
+.hdr{display:flex;align-items:center;gap:6px;margin-bottom:4px}.dot{width:20px;height:20px;border-radius:50%;background:var(--g);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:700}.t{font-size:15px;font-weight:700}
+.boxes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.box{border:1px solid var(--line)}.cap{background:var(--g);color:#fff;padding:4px 6px;font-size:12px;font-weight:700}.txt{padding:5px 6px;font-size:12px;line-height:1.16}.txt ul{margin:0;padding-left:14px}.txt li{margin:1px 0}
+.footer{border-top:2px solid var(--b);padding-top:4px;font-size:12px;line-height:1.2}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px}.k{border:1px dashed var(--line);padding:4px;font-size:12px;line-height:1.15}
+</style></head>
+<body><div class="slide">
+<div><h1>Key Components of SIMM Model Validation</h1><div class="sub">Phase 2 Content Page | High-density consulting draft | Minimum font size = 11-12 range (optimize for one-page briefing print)</div></div>
+<div class="banner"><b>Validation mission:</b> Prove Internal System B’s SIMM implementation is technically correct, data-complete, and regulatorily defensible under ISDA SIMM v2.8+2506 + HKMA CR-G-14. <b>Evidence standard:</b> requirement-to-test traceability with reproducible calculation artifacts and documented root-cause analysis for all material variances.</div>
+<div class="grid">
+<div class="card left">
+<h2>1) Scope Design & Testing Logic</h2>
+<ul>
+<li><b>Coverage rule:</b> one representative trade per risk type, stratified by product family, currency, and option moneyness (ATM/ITM/OTM), then expanded where materiality requires.</li>
+<li><b>Risk stack:</b> Delta, Vega, Curvature, and Base Correlation (Credit Qualifying only), including concentration scaling impact.</li>
+<li><b>Portfolio layers:</b> sampled deep-dive (design defects) + full-population controls (production integrity).</li>
+<li><b>Control objects:</b> versioning, parameter pack, risk mapping, aggregation logic, sensitivity production, data lineage, reconciliation and governance evidence.</li>
+<li><b>Out-of-scope:</b> independent curve/surface reconstruction (unless separately mandated); scope is consistency and mapping validation between valuation and SIMM.</li>
+<li><b>Materiality policy:</b> set variance thresholds by component (risk-class IM, product-class IM, total IM), then trigger RCA workflow for breaches.</li>
+<li><b>Three assurance dimensions:</b> regulatory compliance, computational correctness, and data governance sustainability.</li>
+</ul>
+<h2 style="margin-top:6px">Critical Evidence Required</h2>
+<ul>
+<li>Version memo (methodology + effective date + parameter release)</li>
+<li>Sensitivity extracts with mapping keys and timestamp lineage</li>
+<li>Aggregation intermediate outputs (bucket-level and risk-class level)</li>
+<li>GL/Sub-ledger/Golden-source reconciliation snapshots</li>
+<li>Independent recompute logs and exception register</li>
+</ul>
+</div>
+<div class="right">
+<div class="sec">
+<div class="hdr"><div class="dot">2</div><div class="t">Methodology Implementation + Sensitivity Verification</div></div>
+<div class="boxes">
+<div class="box"><div class="cap">A. SIMM Methodology Controls</div><div class="txt"><ul>
+<li>Confirm SIMM version in production aligns with policy baseline.</li>
+<li>Validate risk weights/correlation matrices/concentration thresholds are loaded correctly and date-effective.</li>
+<li>Check product-class and risk-class aggregation flow: no unintended netting or diversification outside the spec.</li>
+<li>Verify Base Correlation treatment appears only where applicable and is not double-counted with spread risk.</li>
+<li>Reconcile intermediate K/S terms for selected buckets to detect implementation drift.</li>
+</ul></div></div>
+<div class="box"><div class="cap">B. Sensitivity Production Controls</div><div class="txt"><ul>
+<li>Delta/Vega/Curvature generation aligns with pricing model conventions and shock definitions.</li>
+<li>Test bump-size, optionality capture, sign conventions, and unit normalization.</li>
+<li>Validate mapping keys: currency, tenor, issuer, bucket, sector, product class.</li>
+<li>Challenge representative trades independently; compare component sensitivities before IM aggregation.</li>
+<li>Escalate if mismatch indicates model, mapping, or data-engine interface defects.</li>
+</ul></div></div>
+</div>
+</div>
+<div class="sec">
+<div class="hdr"><div class="dot">3</div><div class="t">Data Quality, Independent Recompute, and Outcome Analysis</div></div>
+<div class="boxes">
+<div class="box"><div class="cap">C. Data Integrity + Reconciliation</div><div class="txt"><ul>
+<li>Sample-level checks: position completeness, reference mapping, market data timeliness.</li>
+<li>Full-population checks: IM input/output reconciliation to GL, sub-ledger, and golden source.</li>
+<li>Curve/surface consistency: identifier, timestamp, and usage alignment between valuation and SIMM stack.</li>
+<li>Stale/missing data controls: fallback rules, override approvals, and exception journaling.</li>
+<li>Lineage proof: source → transformation → sensitivity → IM result trace.</li>
+</ul></div></div>
+<div class="box"><div class="cap">D. Independent Recompute + Backtesting Review</div><div class="txt"><ul>
+<li>Run independent SIMM engine and compare Delta/Vega/Curvature/risk-class/total IM levels.</li>
+<li>Apply tolerance grid and root-cause tree (parameter, mapping, aggregation, or source data).</li>
+<li>Review 1-day, 10-day, and rolling backtesting methodology design against latest requirements.</li>
+<li>Document findings as compliant / partial / gap with remediation owner and retest criteria.</li>
+<li>Produce regulator-ready pack: methods, evidence, exceptions, and closure status.</li>
+</ul></div></div>
+</div>
+<div class="kpi">
+<div class="k"><b>Output 1</b><br/>Component-level variance matrix</div>
+<div class="k"><b>Output 2</b><br/>RCA issue register + severity grading</div>
+<div class="k"><b>Output 3</b><br/>Reconciliation breach dashboard</div>
+<div class="k"><b>Output 4</b><br/>Retest-ready remediation tracker</div>
+</div>
+</div>
+</div>
+</div>
+<div class="footer"><b>Expected decision utility:</b> This phase delivers fact-based evidence for final compliance judgement and provides a prioritized remediation pathway that is auditable, testable, and operationally repeatable.</div>
+</div></body></html>
