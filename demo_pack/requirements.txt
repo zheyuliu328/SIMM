@@ -1,0 +1,29 @@
+# SIMM Challenger Demo Pack - Python Dependencies
+# Round 3 Optimize | 2025-02-24
+
+# Core dependencies (教学版+生产版共有)
+dataclasses; python_version < "3.7"
+typing-extensions; python_version < "3.8"
+
+# 数值计算 (生产版必需)
+numpy>=1.20.0
+pandas>=1.3.0
+
+# 数据验证 (生产版必需)
+pydantic>=1.8.0
+
+# 测试框架
+pytest>=6.0.0
+pytest-cov>=2.12.0
+
+# 代码质量
+black>=21.0
+flake8>=3.9.0
+mypy>=0.910
+
+# 文档生成
+sphinx>=4.0.0
+
+# 可选: 可视化
+matplotlib>=3.4.0
+seaborn>=0.11.0
