@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Project Governance and Engagement</title>
+  <style>
+    :root{--ink:#0f172a;--muted:#475569;--line:#cbd5e1;--green:#0f6a3f;--teal:#0e7c86;--dark:#24323f}
+    html,body{margin:0;background:#fff;font-family:"Segoe UI",Arial,sans-serif;color:var(--ink)}
+    .slide{width:1366px;height:768px;margin:0 auto;box-sizing:border-box;padding:18px 20px 14px;display:grid;grid-template-rows:auto auto 1fr auto;gap:10px}
+    h1{margin:0;font-size:34px;line-height:1.05;color:#1f2937}
+    .intro{font-size:14px;color:#374151;line-height:1.25}
+
+    .mid{display:grid;grid-template-columns:260px 1fr;gap:12px;min-height:0}
+    .rings{border:1px solid var(--line);display:flex;align-items:center;justify-content:center;position:relative;background:#f8fafc}
+    .ring1,.ring2,.ring3{border-radius:50%;position:absolute}
+    .ring1{width:210px;height:210px;border:26px solid #2f3f4c;border-right-color:transparent;transform:rotate(-20deg)}
+    .ring2{width:145px;height:145px;border:22px solid #0f8a93;border-top-color:transparent;transform:rotate(20deg)}
+    .ring3{width:72px;height:72px;background:#78b32d}
+    .ringtxt1,.ringtxt2{position:absolute;color:#fff;font-size:12px;font-weight:700;transform-origin:center}
+    .ringtxt1{top:45px;left:25px;transform:rotate(-28deg)}
+    .ringtxt2{bottom:95px;left:56px;transform:rotate(-75deg)}
+
+    .framework{display:grid;grid-template-rows:auto auto;gap:10px;min-height:0}
+    .band{border:1px solid var(--line)}
+    .band .head{background:var(--dark);color:#fff;font-size:13px;font-weight:700;padding:6px 10px}
+    .band ul{margin:0;padding:9px 14px 9px 24px}
+    .band li{font-size:14px;line-height:1.25;margin:5px 0}
+
+    .band2{border:1px solid var(--line)}
+    .band2 .head{background:var(--teal);color:#fff;font-size:13px;font-weight:700;padding:6px 10px}
+    .band2 ul{margin:0;padding:9px 14px 9px 24px;background:#ecfeff}
+    .band2 li{font-size:14px;line-height:1.25;margin:5px 0}
+
+    table{width:100%;border-collapse:collapse;table-layout:fixed}
+    th,td{border:1px solid #9ca3af;padding:7px 8px;font-size:13px;line-height:1.2;vertical-align:top}
+    th{background:var(--green);color:#fff;text-align:left}
+    .footer{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="slide">
+    <div>
+      <h1>Project Governance and Engagement</h1>
+      <div class="intro">We have designed a governance framework to ensure project progress, key observations, and validation outcomes are communicated to stakeholders in a timely and transparent manner.</div>
+    </div>
+
+    <div class="mid">
+      <div class="rings">
+        <div class="ring1"></div>
+        <div class="ring2"></div>
+        <div class="ring3"></div>
+        <div class="ringtxt1">Bi-weekly progress updates</div>
+        <div class="ringtxt2">Ad-hoc interviews / meetings</div>
+      </div>
+
+      <div class="framework">
+        <div class="band">
+          <div class="head">Bi-weekly Progress Update Meetings</div>
+          <ul>
+            <li>Communicate progress status, preliminary findings, and key issues identified.</li>
+            <li>Align timeline, dependencies, and delivery expectations with all core stakeholders.</li>
+            <li>Share testing procedures and evidence basis supporting interim conclusions.</li>
+            <li>Escalate roadblocks requiring management decisions or cross-team support.</li>
+            <li>Capture feedback and confirm next-step priorities and action ownership.</li>
+          </ul>
+        </div>
+
+        <div class="band2">
+          <div class="head">Ad-hoc Interviews / Working Meetings</div>
+          <ul>
+            <li>Collect targeted inputs from business, risk, model, data, and IT teams for deliverable completion.</li>
+            <li>Maintain regular issue-resolution dialogue to close data, mapping, and methodology gaps.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:5%">#</th>
+            <th style="width:45%">Upcoming Meeting</th>
+            <th style="width:22%">Estimated Meeting Date</th>
+            <th style="width:28%">Stakeholders</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Bi-Weekly Progress Update Meeting #1</td>
+            <td>Week 1</td>
+            <td>PMO, Validation Team, Risk, IT</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Ad-hoc Interviews / Working Meetings</td>
+            <td>On-going</td>
+            <td>PMO, Workstream Owners, Supporting Functions</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Bi-Weekly Progress Update Meeting #2</td>
+            <td>Week 3</td>
+            <td>PMO, Validation Team, Risk, IT</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="footer">Governance objective: disciplined execution, transparent escalation, and regulator-ready engagement records.</div>
+  </div>
+</body>
+</html>
