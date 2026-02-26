@@ -1,0 +1,461 @@
+---
+title: "SIMM 2.8 Challenge Model - Technical Specification"
+subtitle: "Product-Level Verification Framework Based on ISDA SIMM 2.8 Methodology"
+author: 
+  - "Risk Quantitative Team"
+date: "February 26, 2026"
+format:
+  docx:
+    toc: true
+    number-sections: true
+    highlight-style: github
+reference-doc: null
+---
+
+# Executive Summary {.unnumbered}
+
+## Key Achievements
+
+This document presents a **four-tier defense architecture** for validating SIMM 2.8 calculations at the product level. Unlike black-box model comparison, our Challenge Model implements **mathematical assertions based on ISDA SIMM 2.8 official methodology** to verify the applicability of SIMM 2.8 across different product types.
+
+### Core Innovation
+
+| Aspect | Description |
+|--------|-------------|
+| **Validation Approach** | Mathematical assertions based on ISDA SIMM 2.8 Section C |
+| **Product Coverage** | All 26 products (T001-T026) from the product inventory |
+| **Defense Layers** | 4 tiers: Linear → Vanilla Options → Credit → Exotic |
+| **Failover Strategy** | Automatic fallback to Schedule-Based when SIMM 2.8 formula breaks down |
+
+### Critical Formulas at a Glance
+
+**Tier 1 (Linear Products):** Weighted Sensitivity Aggregation
+$$WS_k = RW_k \cdot s_k \cdot CR_k$$
+
+**Tier 2 (Vanilla Options):** Curvature Risk via Vega Proxy  
+$$CVR_{ik} = \sum_j SF(t_{kj}) \cdot \sigma_{kj} \cdot \frac{\partial V_i}{\partial \sigma}$$
+
+**Tier 3 (Credit Products):** Risk Weight by Credit Quality
+$$RW_{CRQ} = 10\%, \quad RW_{CRNQ} = 30\%$$
+
+**Tier 4 (Exotic Products):** Circuit Breaker when Distance to Barrier $< 2\%$
+
+---
+
+# 1. Design Philosophy
+
+## 1.1 Why Challenge Model?
+
+The Challenge Model does **NOT** replace SIMM 2.8. Instead, it serves as an independent validation layer that:
+
+1. **Verifies** SIMM 2.8 results against theoretical bounds from ISDA methodology
+2. **Detects** formula breakdown for products where SIMM 2.8 assumptions fail
+3. **Triggers** automatic failover to conservative Schedule-Based method when needed
+
+## 1.2 Four-Tier Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    CHALLENGE MODEL ARCHITECTURE              │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  🟢 TIER 1: Linear Products (LOW Risk)                      │
+│     Products: IRS, FX Forward, Equity Swap, CDS Index       │
+│     Check: Aggregation logic, Risk Weights, CR bounds       │
+│                                                              │
+│  🟡 TIER 2: Vanilla Options (MEDIUM Risk)                   │
+│     Products: Swaption, FX Option, Equity Option            │
+│     Check: SF(t) approximation, Vega consistency           │
+│                                                              │
+│  🟠 TIER 3: Credit Products (HIGH Risk)                     │
+│     Products: CDS IG, HY, Distressed, No-Rating             │
+│     Check: CRQ/CRNQ classification, Jump-to-Default         │
+│                                                              │
+│  🔴 TIER 4: Exotic Products (CRITICAL Risk)                 │
+│     Products: Barrier, Digital, TARF, Touch                 │
+│     Check: Pin Risk, Formula breakdown, Circuit breaker     │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+# 2. Tier 1: Linear Products
+
+## 2.1 Applicable Products
+
+Based on ISDA SIMM 2.8 Section C.1 (Delta Risk):
+
+| Product ID | Product Type | Risk Class |
+|------------|--------------|------------|
+| T001, T002 | InterestRateSwap | InterestRate |
+| T004 | FXForward | FX |
+| T006 | CrossCurrencySwap | FX |
+| T007, T009 | EquitySwap, EquityForward | Equity |
+| T012, T013 | CDS_Index_IG, CDS_AAA | CreditQualifying |
+| T018 | CommoditySwap | Commodity |
+| T020 | GoldForward | Commodity |
+
+## 2.2 ISDA SIMM 2.8 Formulas
+
+### Formula 1: Weighted Sensitivity
+$$WS_k = RW_k \cdot s_k \cdot CR_k$$
+
+Where:
+- $RW_k$ = Risk Weight from Table 1-6 (e.g., 1.5% for IR)
+- $s_k$ = Sensitivity input (Delta)
+- $CR_k$ = Concentration Risk Factor ($\geq 1$)
+
+### Formula 2: Delta Margin Aggregation
+$$K = \sqrt{\sum_k WS_k^2 + \sum_k \sum_{l \neq k} \rho_{kl} \cdot f_{kl} \cdot WS_k \cdot WS_l}$$
+
+Where:
+- $\rho_{kl}$ = Correlation coefficient from ISDA tables
+- $f_{kl}$ = Correlation factor
+
+### Formula 3: Concentration Risk Factor
+$$CR_k = \max\left(1, \sqrt{\frac{|\sum s|}{0.5 \times \text{Threshold}_k}}\right)$$
+
+## 2.3 Challenge Points
+
+### Challenge 1: Risk Weight Verification
+**Source**: ISDA SIMM 2.8 Table 1-6
+
+| Risk Class | Expected RW | Tolerance |
+|------------|-------------|-----------|
+| InterestRate | 1.5% | $\pm 0.1\%$ |
+| FX | 8% | $\pm 0.1\%$ |
+| Equity | 20% | $\pm 0.1\%$ |
+| CreditQualifying | 10% | $\pm 0.1\%$ |
+
+**Assertion**:
+$$|RW_{\text{used}} - RW_{\text{expected}}| < 0.001$$
+
+### Challenge 2: Aggregation Upper Bound
+**Source**: Triangle Inequality (Mathematical Law)
+
+Theoretical maximum: When all correlations $\rho_{kl} = 1$
+$$K_{\max} = \sum_k |WS_k|$$
+
+**Assertion**:
+$$K \leq \sum_k |WS_k| \times 1.01$$
+
+*If violated: SIMM aggregation logic contains numerical errors.*
+
+### Challenge 3: Margin Notional Sanity
+**Assertion**:
+$$\text{Margin} \leq \text{Notional}$$
+
+*If violated: Non-physical result requiring immediate investigation.*
+
+---
+
+# 3. Tier 2: Vanilla Options
+
+## 3.1 Applicable Products
+
+Based on ISDA SIMM 2.8 Section C.8 (Curvature Risk):
+
+| Product ID | Product Type | Key Risk |
+|------------|--------------|----------|
+| T003 | Swaption | IR Vega |
+| T005 | FXOption | FX Vega |
+| T008 | EquityOption | Equity Vega |
+| T019 | CommodityOption | Commodity Vega |
+
+## 3.2 ISDA SIMM 2.8 Formulas
+
+### Formula 4: Curvature Risk
+$$CVR_{ik} = \sum_j SF(t_{kj}) \cdot \sigma_{kj} \cdot \frac{\partial V_i}{\partial \sigma}$$
+
+Where:
+- $SF(t)$ = Scaling Function
+- $\sigma$ = Implied volatility
+- $\frac{\partial V}{\partial \sigma}$ = Vega
+
+### Formula 5: Scaling Function (SF)
+$$SF(t) = 0.5 \times \min\left(1, \frac{14}{t}\right)$$
+
+Where $t$ = time to maturity in days.
+
+**Important Note** (ISDA SIMM 2.8 Section C.8, Note 2):
+> "The curvature risk approach is based on the assumption that the portfolio contains vanilla options."
+
+## 3.3 Challenge Points
+
+### Challenge 1: "Vanilla-ness" Check
+**Financial Physics Principle**:
+The SF(t) formula assumes the Vega-Gamma relationship for vanilla options:
+$$\Gamma \approx \frac{\text{Vega}}{S \cdot \sigma \cdot \sqrt{t}}$$
+
+This relationship **breaks down** for deep ITM/OTM options.
+
+**Assertion**:
+$$0.7 \leq \text{Moneyness} \leq 1.3$$
+
+Where $\text{Moneyness} = S/K$ (Spot/Strike).
+
+### Challenge 2: Vega Cross-Validation
+**Source**: Black-Scholes Model (Independent Pricing Engine)
+
+**Formula 6: Black-Scholes Vega**
+$$\text{Vega}_{BS} = S \cdot \sqrt{t} \cdot N'(d_1)$$
+
+Where:
+$$d_1 = \frac{\ln(S/K) + (r + \sigma^2/2)t}{\sigma\sqrt{t}}$$
+
+$$N'(x) = \frac{1}{\sqrt{2\pi}} e^{-x^2/2}$$
+
+**Assertion**:
+$$\left|\frac{\text{Vega}_{BS} - \text{Vega}_{SIMM}}{\text{Vega}_{SIMM}}\right| < 0.10$$
+
+### Challenge 3: Curvature Upper Bound
+**Financial Physics Principle**:
+CVR should not exceed Notional × Volatility × $\sqrt{\text{Time}}$.
+
+**Assertion**:
+$$CVR \leq \text{Notional} \cdot \sigma \cdot \sqrt{t} \times 2$$
+
+---
+
+# 4. Tier 3: Credit Products
+
+## 4.1 Applicable Products
+
+Based on ISDA SIMM 2.8 Section C.6-C.7:
+
+| Product ID | Product Type | Credit Rating | Category |
+|------------|--------------|---------------|----------|
+| T010, T011, T025 | CDS_IG | BBB+, A, BBB+ | CreditQualifying |
+| T012, T013 | CDS_Index_IG, CDS_AAA | AA, AAA | CreditQualifying |
+| T014, T015, T026 | CDS_HY | BB, B, BB- | CreditNonQualifying |
+| T016 | CDS_Distressed | CCC | CreditNonQualifying |
+| T017 | CDS_NoRating | None | CreditNonQualifying |
+
+## 4.2 ISDA SIMM 2.8 Classification
+
+### Formula 7: Credit Quality Risk Weights
+$$RW_{CRQ} = 10\% \quad \text{(Investment Grade: BBB- and above)}$$
+
+$$RW_{CRNQ} = 30\% \quad \text{(High Yield: BB+ and below, or unrated)}$$
+
+## 4.3 Challenge Points
+
+### Challenge 1: CRQ/CRNQ Classification Verification
+**Source**: ISDA SIMM 2.8 Section C.6.1 (Qualifying Criteria)
+
+**Classification Rule**:
+- Qualifying: Rating $\in$ {AAA, AA, A, BBB, BBB+, BBB-}
+- Non-Qualifying: Rating $\in$ {BB, BB+, BB-, B, B+, B-, CCC, CC, C} or None
+
+**Assertion**:
+$$\text{Expected Qualifying} = \text{Actual Qualifying}$$
+
+*If violated: RW error of 3× (10% vs 30%), leading to severe margin miscalculation.*
+
+### Challenge 2: Jump-to-Default (JTD) Risk
+**Source**: ISDA SIMM 2.8 Section C.6.3 (Residual Risks)
+
+For distressed credits (CCC, CC, C), Delta may not fully capture default jump risk.
+
+**Formula 8: Jump-to-Default Risk**
+$$JTD = \text{Notional} \times (1 - R) \times PD$$
+
+Where:
+- $R$ = Recovery rate (typically 40%)
+- $PD$ = Probability of default
+
+**Assertion**:
+$$\text{Margin} \geq JTD \times 0.50$$
+
+*If violated: SIMM margin may be insufficient for distressed credits.*
+
+---
+
+# 5. Tier 4: Exotic Products (Circuit Breaker)
+
+## 5.1 Products with Formula Breakdown Risk
+
+Based on ISDA SIMM 2.8 Section C.8, Note 3:
+
+> "For exotics or path-dependent options, the curvature risk formula may not be appropriate."
+
+| Product Type | Risk Mechanism | Formula Issue |
+|--------------|----------------|---------------|
+| **Barrier** (KO/KI) | Pin Risk near barrier | Vega $\to \infty$ as $S \to$ Barrier |
+| **Digital** | Discontinuous payoff | Delta undefined at strike |
+| **TARF** | Path dependency | Behavior changes near target |
+| **Touch** | Binary trigger | Similar to Barrier |
+
+## 5.2 Circuit Breaker Conditions
+
+### Circuit Breaker 1: Pin Risk Detection
+**Financial Physics Principle**:
+Near the barrier, option Greeks become mathematically explosive.
+
+**Condition**:
+$$\frac{|S - B|}{B} < 2\%$$
+
+Where $S$ = Spot price, $B$ = Barrier level.
+
+**Consequence**: 
+- Vega $\to \infty$
+- $CVR = SF(t) \cdot \sigma \cdot \text{Vega} \to \infty$
+- SIMM 2.8 produces nonsensical results
+
+**Action**: **IMMEDIATE FALLBACK TO SCHEDULE-BASED**
+
+### Circuit Breaker 2: CVR Exceeds Notional
+**Assertion**:
+$$CVR \leq \text{Notional}$$
+
+*If violated: Non-physical result. Formula has broken down.*
+
+### Circuit Breaker 3: Digital Option Discontinuity
+**Condition**:
+$$\frac{|S - K|}{K} < 1\% \quad \text{for Digital options}$$
+
+**Issue**: Delta jumps from 0 to Notional at strike. Not differentiable.
+
+**Action**: **FALLBACK TO SCHEDULE-BASED**
+
+### Circuit Breaker 4: TARF Path Dependency
+**Behavior Transition**:
+- Far from target ($< 80\%$): Acts like option → High Vega appropriate
+- Near target ($\geq 80\%$): Acts like forward → Low Vega expected
+
+**Condition**:
+$$\text{Completion} = \frac{\text{Accumulated Gain}}{\text{Target}} > 80\%$$
+
+**Assertion**:
+$$\text{Vega Risk} \leq 0.5 \times \text{Delta Risk} \quad \text{(when completion > 80\%)}$$
+
+*If violated: SIMM 2.8 fails to capture behavior transition.*
+
+---
+
+# 6. Failover Strategy
+
+## 6.1 Circuit Breaker Summary
+
+| Tier | Trigger Condition | Fallback Model | Reason |
+|------|-------------------|----------------|--------|
+| 🟢 Tier 1 | $K > \sum|WS| \times 1.01$ | ScheduleBased | Aggregation error |
+| 🟡 Tier 2 | $CVR > 2 \times$ theoretical bound | SimplifiedSIMM | Vega anomaly |
+| 🟠 Tier 3 | Rating classification error | Manual Review | 3× RW error |
+| 🔴 Tier 4 | Any circuit breaker | **ScheduleBased** | Formula breakdown |
+
+## 6.2 Schedule-Based Fallback
+
+**Source**: ISDA SIMM 2.8 Section C.9 (Simplified Method)
+
+Regulator-approved conservative method using fixed percentages:
+- Linear products: 1%–20% by asset class
+- Options: Additional add-on fees
+
+**Formula 9: Schedule-Based Margin**
+$$\text{Margin}_{Schedule} = \text{Notional} \times \text{Fixed Percentage}_{\text{Asset Class}}$$
+
+---
+
+# 7. Implementation
+
+## 7.1 Python Class Structure
+
+```python
+# Core Challenge Classes
+class LinearProductChallenge:
+    """TIER 1: Linear products validation"""
+    def challenge(self, trade, simm_result) -> ChallengeResult
+
+class VanillaOptionChallenge:
+    """TIER 2: Vanilla options validation"""
+    def challenge(self, trade, simm_result) -> ChallengeResult
+
+class CreditProductChallenge:
+    """TIER 3: Credit products validation"""
+    def challenge(self, trade, simm_result) -> ChallengeResult
+
+class ExoticCircuitBreaker:
+    """TIER 4: Exotic products circuit breaker"""
+    def challenge(self, trade, simm_result) -> ChallengeResult
+
+class ChallengeRouter:
+    """Routes products to appropriate challenge strategy"""
+    def route(self, trade) -> ChallengeStrategy
+    def validate(self, trade, simm_result) -> ChallengeResult
+```
+
+## 7.2 Product Mapping (T001-T026)
+
+| Product ID | Type | Tier | Challenge Class | ISDA Section |
+|------------|------|------|-----------------|--------------|
+| T001-T002 | InterestRateSwap | 🟢 | LinearProductChallenge | C.1 |
+| T003 | Swaption | 🟡 | VanillaOptionChallenge | C.8 |
+| T004 | FXForward | 🟢 | LinearProductChallenge | C.4 |
+| T005 | FXOption | 🟡 | VanillaOptionChallenge | C.8 |
+| T006 | CrossCurrencySwap | 🟢 | LinearProductChallenge | C.4 |
+| T007 | EquitySwap | 🟢 | LinearProductChallenge | C.5 |
+| T008 | EquityOption | 🟡 | VanillaOptionChallenge | C.8 |
+| T009 | EquityForward | 🟢 | LinearProductChallenge | C.5 |
+| T010-T013, T025 | CDS IG/Index | 🟠 | CreditProductChallenge | C.6 |
+| T014-T017, T026 | CDS HY/Distressed | 🟠 | CreditProductChallenge | C.7 |
+| T018 | CommoditySwap | 🟢 | LinearProductChallenge | C.9 |
+| T019 | CommodityOption | 🟡 | VanillaOptionChallenge | C.8 |
+| T020 | GoldForward | 🟢 | LinearProductChallenge | C.9 |
+
+---
+
+# 8. Verification & Testing
+
+## 8.1 Test Case Design
+
+| Test Type | Count | Purpose |
+|-----------|-------|---------|
+| Normal cases | 20 | Verify passing conditions |
+| Boundary cases | 10 | Test tolerance thresholds |
+| Circuit breaker cases | 8 | Verify fallback triggers |
+| Regression cases | 5 | Prevent future failures |
+
+## 8.2 Key Metrics
+
+| Metric | Target | Measurement |
+|--------|--------|-------------|
+| Circuit breaker trigger rate | $< 5\%$ | Normal market conditions |
+| False positive rate | $< 2\%$ | Verified against historical data |
+| Fallback conservatism | $> 1.2\times$ | ScheduleBased / SIMM 2.8 |
+
+---
+
+# 9. Conclusion
+
+## 9.1 Key Takeaways
+
+1. **Not a Black Box**: Every challenge point has explicit ISDA SIMM 2.8 section reference
+2. **Mathematical Assertions**: All validations are based on financial physics laws (e.g., triangle inequality)
+3. **Product-Aware**: Different strategies for different product risk profiles
+4. **Fail-Safe**: Automatic fallback when SIMM 2.8 formula breaks down
+
+## 9.2 Regulatory Compliance
+
+- ✅ ISDA SIMM 2.8 Methodology compliant
+- ✅ EMIR 3.0 model validation requirements
+- ✅ Cross-platform compatible (Windows/macOS/Linux)
+- ✅ No third-party dependencies (stdlib only)
+
+---
+
+# Appendix A: Formula Reference Table
+
+| Formula | Description | ISDA Section |
+|---------|-------------|--------------|
+| $WS_k = RW_k \cdot s_k \cdot CR_k$ | Weighted Sensitivity | C.1 |
+| $K = \sqrt{\sum WS_k^2 + \sum\sum \rho_{kl} f_{kl} WS_k WS_l}$ | Delta Margin Aggregation | C.1 |
+| $SF(t) = 0.5 \times \min(1, 14/t)$ | Scaling Function | C.8 |
+| $CVR_{ik} = \sum SF(t) \cdot \sigma \cdot \text{Vega}$ | Curvature Risk | C.8 |
+| $JTD = \text{Notional} \times (1-R) \times PD$ | Jump-to-Default | C.6.3 |
+| $\text{Distance} = |S - B|/B < 2\%$ | Pin Risk Threshold | C.8 Note 3 |
+
+---
+
+**Document End | Ready for Word Export**
