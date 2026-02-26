@@ -3,7 +3,7 @@ title: "SIMM 2.8 Challenge Model Technical Specification"
 subtitle: "Product-Level Verification Framework with Mathematical Circuit Breakers"
 author: "Risk Management Team"
 date: "February 26, 2026"
-version: "1.0.0"
+version: "1.1.0"
 ---
 
 # Executive Summary
@@ -16,6 +16,17 @@ This document specifies the **SIMM 2.8 Challenge Model**—an independent verifi
 - **Mathematical Circuit Breakers**: ISDA-formula-based assertions (not black-box comparisons)
 - **Fallback Mechanism**: Automatic downgrade to Schedule-based method when SIMM 2.8 fails
 - **Cross-Platform Compatibility**: Pure Python implementation, Windows/macOS/Linux support
+
+## Version 1.1.0 Updates (Excel Alignment)
+
+Based on SPEC_EN vs Excel requirements analysis, this version adds:
+
+- **Tier 1**: Cross Currency Swap (with ARR features)
+- **Tier 2**: Time Option (Option Dated Forward)
+- **Tier 4**: Extended barrier types (RKO, RKI, KIKO)
+- **Tier 4**: New TARF variants (Pivot TARF, Digital TARF)
+- **Tier 4**: Digital Range Option
+- **Tier 4**: EKI/Non-EKI distinction for TARF margin floors
 
 ---
 
@@ -72,13 +83,24 @@ The Challenge Model follows a **dual-track calculation** approach:
 
 ## 2.1 Scope
 
-**Applicable Products**: FX Forward, FX Swap, NDF, IRS, Basis Swap
+**Applicable Products**: FX Forward, FX Swap, NDF, IRS, Basis Swap, Cross Currency Swap (with ARR features)
 
 **ISDA SIMM 2.8 References**:
 - Section C.1: Delta Risk
 - Section 4: Aggregation Formula
 - Table 1: Risk Weights
 - Table 4: Correlation Coefficients
+
+### Product Coverage Matrix
+
+| Product | ARR Support | Risk Weight Adjustment |
+|---------|-------------|----------------------|
+| FX Forward | N/A | Standard FX RW |
+| FX Swap | N/A | Standard FX RW |
+| NDF | N/A | Standard FX RW |
+| IRS | Yes | +2% for ARR features |
+| Basis Swap | Yes | +2% for ARR features |
+| Cross Currency Swap | Yes | FX RW with basis adjustment |
 
 ## 2.2 Official SIMM 2.8 Formulas
 
@@ -139,11 +161,20 @@ $$K \leq \left(\sum_k |WS_k|\right) \times 1.01$$
 
 ## 3.1 Scope
 
-**Applicable Products**: Vanilla Option, Swaption, Gold Option
+**Applicable Products**: Vanilla Option, Swaption, Gold Option, Time Option (Option Dated Forward)
 
 **ISDA SIMM 2.8 References**:
 - Section C.8: Curvature Risk
 - Section 11(a): Curvature for Vanilla Options
+
+### Extended Vanilla Option Features
+
+| Feature | Description | Challenge Approach |
+|---------|-------------|-------------------|
+| European Style | Standard vanilla | Vega-Gamma check |
+| Time Option | Option Dated Forward | Forward-like delta check |
+| Barrier Variants | Up/Down In/Out | Barrier distance check |
+| Payout Currency | Domestic/Foreign | FX delta adjustment |
 
 ## 3.2 Official SIMM 2.8 Curvature Formula
 
@@ -271,7 +302,37 @@ If margin is insufficient to cover jump-to-default risk, flag as under-margined.
 
 ## 5.1 Scope
 
-**Applicable Products**: Digital Option, Touch, Barrier (KO/KI), TARF, Range Accrual
+**Applicable Products**:
+
+### Barrier Options (Extended)
+| Type | Code | Description | Pin Risk Threshold |
+|------|------|-------------|-------------------|
+| Knock Out | KO | Standard knock out | 2% |
+| Reverse KO | RKO | Reverse barrier KO | 3% |
+| Knock In | KI | Standard knock in | 2% |
+| Reverse KI | RKI | Reverse barrier KI | 3% |
+| KIKO | KIKO | Double barrier (KI+KO) | 2.5% |
+
+### Digital Options
+| Type | Description | Discontinuity Points |
+|------|-------------|---------------------|
+| European Digital | Standard digital | 1 (strike) |
+| Digital Range | Range digital | 2 (lower/upper) |
+
+### TARF Variants
+| Type | Code | Floor Factor | Notes |
+|------|------|--------------|-------|
+| Standard TARF | TARF | 10% | No EKI |
+| TARF with EKI | TARF_EKI | 15% | Enhanced Knock-In |
+| Capped TARF | TARF_CAPPED | 12% | Profit cap applied |
+| Pivot TARF | TARF_PIVOT | 16% | Pivot structure |
+| Digital TARF | TARF_DIGITAL | 18% | Digital payoff |
+
+### Other Exotics
+| Product | Risk Factor |
+|---------|-------------|
+| Touch | Single touch payout |
+| Range Accrual | Range observation |
 
 **ISDA SIMM 2.8 Critical Note** (Section 11(a)):
 > "This paragraph applies to vanilla options."
