@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SIMM标准初始保证金模型教学演示 - 交互式可视化">
+    <title>SIMM 标准初始保证金模型 - 交互式教学演示 v3.0</title>
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1a1a2e;
+            --gray: #6c757d;
+            --light: #f8f9fa;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+        }
+        
+        header h1 { 
+            font-size: 2.2em; 
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        header p { opacity: 0.9; font-size: 1.1em; }
+        
+        .version-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(102, 126, 234, 0.3);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+        }
+        
+        .content { padding: 40px; }
+        .section { margin-bottom: 40px; }
+        
+        .section h2 {
+            color: #1a1a2e;
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            border: 1px solid #e9ecef;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        .card.active {
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+        }
+        
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .highlight {
+            background: linear-gradient(90deg, #667eea20 0%, #764ba220 100%);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .formula {
+            background: #1a1a2e;
+            color: #00ff88;
+            padding: 16px 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            margin: 15px 0;
+            overflow-x: auto;
+            position: relative;
+        }
+        
+        .formula .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #00ff88;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95em;
+        }
+        
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        tr:hover { background: #f8f9fa; }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        
+        .badge-ir { background: #e3f2fd; color: #1565c0; }
+        .badge-fx { background: #f3e5f5; color: #7b1fa2; }
+        .badge-eq { background: #e8f5e9; color: #2e7d32; }
+        .badge-cr { background: #fff3e0; color: #ef6c00; }
+        .badge-co { background: #fce4ec; color: #c2185b; }
+        
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        
+        .step.active {
+            opacity: 1;
+        }
+        
+        .step-num {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-right: 16px;
+        }
+        
+        .step-content { flex: 1; }
+        .step-content h4 { margin-bottom: 8px; color: #1a1a2e; }
+        
+        .interactive-demo {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            padding: 24px;
+            color: white;
+            margin-top: 20px;
+        }
+        
+        .interactive-demo h3 {
+            color: #00ff88;
+            margin-bottom: 16px;
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .input-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 0.85em;
+            margin-bottom: 4px;
+            color: #94a3b8;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            background: #0f172a;
+            color: white;
+            font-family: monospace;
+            transition: border-color 0.2s;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .input-group input.error {
+            border-color: #ef4444;
+        }
+        
+        .error-message {
+            color: #ef4444;
+            font-size: 0.75em;
+            margin-top: 4px;
+            display: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .result-box {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        .result-value {
+            color: #00ff88;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        
+        .result-value.error {
+            color: #ef4444;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .flowchart {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 24px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow-x: auto;
+        }
+        
+        .flow-node {
+            text-align: center;
+            padding: 12px 16px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            min-width: 100px;
+            font-size: 0.9em;
+        }
+        
+        .flow-arrow {
+            color: #667eea;
+            font-size: 1.5em;
+            margin: 0 8px;
+        }
+        
+        .tab-container {
+            margin-top: 20px;
+        }
+        
+        .tab-nav {
+            display: flex;
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            color: #6c757d;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn:hover {
+            color: #667eea;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        footer {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            header { padding: 24px; }
+            header h1 { font-size: 1.6em; }
+            .content { padding: 24px; }
+            .card-grid { grid-template-columns: 1fr; }
+            .flowchart { flex-direction: column; gap: 12px; }
+            .flow-arrow { transform: rotate(90deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <span class="version-badge">v3.0 (Round 9)</span>
+            <h1>🛡️ SIMM 标准初始保证金模型</h1>
+            <p>Standard Initial Margin Model - 非清算衍生品保证金计算框架</p>
+        </header>
+        
+        <div class="content">
+            <!-- WHY Section -->
+            <div class="section">
+                <h2>🎯 为什么需要 SIMM? (Why)</h2>
+                <div class="highlight">
+                    <p><strong>监管背景：</strong>2016年BCBS/IOSCO保证金要求规定，非清算衍生品交易必须交换初始保证金，以降低系统性风险。</p>
+                </div>
+                <div class="card-grid">
+                    <div class="card" onclick="toggleCard(this)">
+                        <h3>⚠️ 风险防范</h3>
+                        <p>防止交易对手违约引发的连锁反应，保护金融市场稳定。</p>
+                    </div>
+                    <div class="card" onclick="toggleCard(this)">
+                        <h3>📏 标准化计算</h3>
+                        <p>提供统一、透明、可审计的保证金计算方法。</p>
+                    </div>
+                    <div class="card" onclick="toggleCard(this)">
+                        <h3>💰 资本效率</h3>
+                        <p>相较于简单名义本金法，SIMM更精确反映真实风险敞口。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WHICH Section -->
+            <div class="section">
+                <h2>📋 SIMM 包含哪些风险? (Which)</h2>
+                <p>SIMM框架将风险划分为六大类别，采用<b>敏感度法</b>计算：</p>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>风险类别</th>
+                            <th>覆盖产品</th>
+                            <th>主要敏感度</th>
+                            <th>典型风险权重</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-ir">利率 (IR)</span></td>
+                            <td>利率互换、国债期货</td>
+                            <td>DV01, CS01</td>
+                            <td>0.5% - 3%</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-fx">外汇 (FX)</span></td>
+                            <td>外汇远期、货币互换</td>
+                            <td>Delta, Vega</td>
+                            <td>8% - 15%</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-eq">股票 (EQ)</span></td>
+                            <td>股票互换、期权</td>
+                            <td>Delta, Vega, Curvature</td>
+                            <td>15% - 40%</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-cr">信用-标准 (CRQ)</span></td>
+                            <td>投资级CDS、CDX.IG</td>
+                            <td>CS01, JTD</td>
+                            <td>10% (IG: BBB-及以上)</td>
+                        </tr>
+                        <tr style="background: #fff8e1;">
+                            <td><span class="badge badge-cr" style="background: #ff9800; color: white;">信用-非标准 (CRNQ)</span></td>
+                            <td>高收益CDS、无评级单名</td>
+                            <td>CS01, JTD</td>
+                            <td>30% (HY: BB+及以下) ⚠️ 3x RW</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-co">商品 (CO)</span></td>
+                            <td>商品期货、掉期</td>
+                            <td>Delta, Vega</td>
+                            <td>10% - 40%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- HOW Section -->
+            <div class="section">
+                <h2>⚙️ 如何计算? (How)</h2>
+                
+                <!-- 流程图 -->
+                <div class="flowchart">
+                    <div class="flow-node">
+                        <strong>交易数据</strong><br>
+                        <small>Trade Data</small>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-node">
+                        <strong>敏感度</strong><br>
+                        <small>Sensitivity</small>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-node">
+                        <strong>风险权重</strong><br>
+                        <small>Risk Weight</small>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-node">
+                        <strong>方差聚合</strong><br>
+                        <small>Variance</small>
+                    </div>
+                    <span class="flow-arrow">→</span>
+                    <div class="flow-node">
+                        <strong>RCA</strong><br>
+                        <small>总风险费用</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Demo -->
+            <div class="section">
+                <h2>🧮 交互式计算演示</h2>
+                <div class="interactive-demo">
+                    <h3>⚡ 简化SIMM计算器</h3>
+                    <p style="color: #94a3b8; margin-bottom: 16px;">输入各风险类别的敏感度，实时计算RCA</p>
+                    
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>利率敏感度 (IR)</label>
+                            <input type="text" inputmode="decimal" id="irSens" value="100000" oninput="calculateDemo()">
+                            <div id="irSensError" class="error-message">请输入有效数字</div>
+                        </div>
+                        <div class="input-group">
+                            <label>外汇敏感度 (FX)</label>
+                            <input type="text" inputmode="decimal" id="fxSens" value="50000" oninput="calculateDemo()">
+                            <div id="fxSensError" class="error-message">请输入有效数字</div>
+                        </div>
+                        <div class="input-group">
+                            <label>股票敏感度 (EQ)</label>
+                            <input type="text" inputmode="decimal" id="eqSens" value="30000" oninput="calculateDemo()">
+                            <div id="eqSensError" class="error-message">请输入有效数字</div>
+                        </div>
+                    </div>
+                    
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>信用-标准 (CRQ, RW=10%)</label>
+                            <input type="text" inputmode="decimal" id="crqSens" value="20000" oninput="calculateDemo()">
+                            <div id="crqSensError" class="error-message">请输入有效数字</div>
+                        </div>
+                        <div class="input-group">
+                            <label style="color: #ff9800;">信用-非标准 (CRNQ, RW=30%) ⚠️</label>
+                            <input type="text" inputmode="decimal" id="crnqSens" value="10000" oninput="calculateDemo()" style="border-color: #ff9800;">
+                            <div id="crnqSensError" class="error-message">请输入有效数字</div>
+                        </div>
+                        <div class="input-group">
+                            <label>商品敏感度 (CO)</label>
+                            <input type="text" inputmode="decimal" id="coSens" value="15000" oninput="calculateDemo()">
+                            <div id="coSensError" class="error-message">请输入有效数字</div>
+                        </div>
+                    </div>
+                    
+                    <div class="result-box">
+                        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+                            <div>
+                                <div style="color: #94a3b8; font-size: 0.85em;">计算RCA</div>
+                                <div class="result-value" id="rcaResult">6,246.00</div>
+                            </div>
+                            <div>
+                                <div style="color: #94a3b8; font-size: 0.85em;">风险贡献分解</div>
+                                <div id="breakdown" style="margin-top: 8px; font-size: 0.85em;">
+                                    IR: 37% | FX: 39% | EQ: 24%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="riskBar" style="width: 65%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real Demo Results -->
+            <div class="section">
+                <h2>📊 真实运行结果</h2>
+                <div class="highlight">
+                    <p><strong>基于 sample_data.csv 的实际计算输出：</strong></p>
+                </div>
+                <div id="realResults" style="margin-top: 20px;">
+                    <div class="result-card" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 12px; padding: 24px; color: white;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                            <div style="text-align: center; padding: 16px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                                <div style="color: #94a3b8; font-size: 0.85em; margin-bottom: 8px;">交易总数</div>
+                                <div id="realTradeCount" style="font-size: 2em; font-weight: bold; color: #00ff88;">26</div>
+                            </div>
+                            <div style="text-align: center; padding: 16px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                                <div style="color: #94a3b8; font-size: 0.85em; margin-bottom: 8px;">总名义本金</div>
+                                <div id="realNotional" style="font-size: 1.5em; font-weight: bold; color: #00ff88;">237,800,000</div>
+                            </div>
+                            <div style="text-align: center; padding: 16px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                                <div style="color: #94a3b8; font-size: 0.85em; margin-bottom: 8px;">初始保证金 (RCA)</div>
+                                <div id="realRCA" style="font-size: 2em; font-weight: bold; color: #00ff88;">249,599.63</div>
+                            </div>
+                            <div style="text-align: center; padding: 16px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                                <div style="color: #94a3b8; font-size: 0.85em; margin-bottom: 8px;">保证金比率</div>
+                                <div id="realMarginRatio" style="font-size: 2em; font-weight: bold; color: #00ff88;">0.1050%</div>
+                            </div>
+                        </div>
+                        
+                        <h4 style="color: #00ff88; margin: 20px 0 12px 0;">风险类别分解</h4>
+                        <table style="width: 100%; color: white; font-size: 0.9em;">
+                            <thead>
+                                <tr style="background: rgba(255,255,255,0.1);">
+                                    <th style="padding: 12px; text-align: left;">风险类别</th>
+                                    <th style="padding: 12px; text-align: right;">风险权重</th>
+                                    <th style="padding: 12px; text-align: right;">敏感度</th>
+                                    <th style="padding: 12px; text-align: right;">方差贡献</th>
+                                    <th style="padding: 12px; text-align: right;">占比</th>
+                                </tr>
+                            </thead>
+                            <tbody id="riskBreakdownTable">
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                    <td style="padding: 12px;"><span class="badge badge-eq">股票 (EQ)</span></td>
+                                    <td style="padding: 12px; text-align: right;">20.0%</td>
+                                    <td style="padding: 12px; text-align: right;">1,065,000.00</td>
+                                    <td style="padding: 12px; text-align: right;">45,369,000,000</td>
+                                    <td style="padding: 12px; text-align: right; color: #00ff88;">94.89%</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                    <td style="padding: 12px;"><span class="badge badge-cr" style="background: #ff9800; color: white;">信用-非标准 (CRNQ)</span></td>
+                                    <td style="padding: 12px; text-align: right;">30.0%</td>
+                                    <td style="padding: 12px; text-align: right;">135,000.00</td>
+                                    <td style="padding: 12px; text-align: right;">1,640,250,000</td>
+                                    <td style="padding: 12px; text-align: right; color: #00ff88;">3.43%</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                    <td style="padding: 12px;"><span class="badge badge-cr">信用-标准 (CRQ)</span></td>
+                                    <td style="padding: 12px; text-align: right;">10.0%</td>
+                                    <td style="padding: 12px; text-align: right;">230,000.00</td>
+                                    <td style="padding: 12px; text-align: right;">529,000,000</td>
+                                    <td style="padding: 12px; text-align: right; color: #00ff88;">1.11%</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                    <td style="padding: 12px;"><span class="badge badge-co">商品 (CO)</span></td>
+                                    <td style="padding: 12px; text-align: right;">18.0%</td>
+                                    <td style="padding: 12px; text-align: right;">84,000.00</td>
+                                    <td style="padding: 12px; text-align: right;">228,614,400</td>
+                                    <td style="padding: 12px; text-align: right; color: #00ff88;">0.48%</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                    <td style="padding: 12px;"><span class="badge badge-ir">利率 (IR)</span></td>
+                                    <td style="padding: 12px; text-align: right;">1.5%</td>
+                                    <td style="padding: 12px; text-align: right;">-385,000.00</td>
+                                    <td style="padding: 12px; text-align: right;">33,350,625</td>
+                                    <td style="padding: 12px; text-align: right; color: #00ff88;">0.07%</td>
+                                </tr>
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                    <td style="padding: 12px;"><span class="badge badge-fx">外汇 (FX)</span></td>
+                                    <td style="padding: 12px; text-align: right;">8.0%</td>
+                                    <td style="padding: 12px; text-align: right;">41,000.01</td>
+                                    <td style="padding: 12px; text-align: right;">10,758,405</td>
+                                    <td style="padding: 12px; text-align: right; color: #00ff88;">0.02%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div style="margin-top: 16px; padding: 12px; background: rgba(0,255,136,0.1); border-radius: 8px; font-size: 0.85em;">
+                            <strong style="color: #00ff88;">计算说明：</strong>
+                            <span style="color: #94a3b8;">RCA = √(Σ ρᵢⱼ × σᵢ × σⱼ) = 249,599.63 | 信用风险贡献占比: 4.54% | 参数版本: ISDA SIMM 2.5.0-community</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real Code Run Demo -->
+            <div class="section">
+                <h2>🖥️ 真实代码运行 Demo</h2>
+                <div class="highlight" style="background: linear-gradient(90deg, #e8f5e9 0%, #c8e6c9 100%); border-left-color: #22c55e;">
+                    <p><strong>✅ 数据来自真实运行而非手填</strong> — 以下结果是执行 <code>demo.py</code> 的真实输出</p>
+                </div>
+                
+                <div class="card-grid" style="margin-top: 20px;">
+                    <div class="card" style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white;">
+                        <h3 style="color: #00ff88;">💰 初始保证金 (RCA)</h3>
+                        <div style="font-size: 2em; font-weight: bold; color: #00ff88; margin: 10px 0;">$249,599.63</div>
+                        <div style="font-size: 0.85em; opacity: 0.8;">基于 26 笔交易计算</div>
+                    </div>
+                    <div class="card">
+                        <h3>📊 交易统计</h3>
+                        <table style="margin: 0; font-size: 0.9em;">
+                            <tr><td>交易总数</td><td><strong>26</strong></td></tr>
+                            <tr><td>总名义本金</td><td><strong>$237.8M</strong></td></tr>
+                            <tr><td>保证金比率</td><td><strong>0.105%</strong></td></tr>
+                        </table>
+                    </div>
+                    <div class="card">
+                        <h3>⏱️ 运行信息</h3>
+                        <table style="margin: 0; font-size: 0.9em;">
+                            <tr><td>运行时间</td><td><strong>2026-02-25</strong></td></tr>
+                            <tr><td>数据源</td><td><strong>sample_data.csv</strong></td></tr>
+                            <tr><td>版本</td><td><strong>v3.0 (R9)</strong></td></tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; background: #f8f9fa; border-radius: 8px; padding: 16px;">
+                    <h4 style="margin-bottom: 12px; color: #1a1a2e;">📋 风险类别敏感度汇总（真实数据）</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>风险类别</th>
+                                <th>风险权重</th>
+                                <th>敏感度</th>
+                                <th>方差贡献</th>
+                                <th>占比</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge badge-eq">股票 (EQ)</span></td>
+                                <td>20.00%</td>
+                                <td>1,065,000.00</td>
+                                <td>45,369,000,000</td>
+                                <td><strong>72.8%</strong></td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-cr" style="background: #ff9800; color: white;">信用-非标准 (CRNQ)</span></td>
+                                <td>30.00%</td>
+                                <td>135,000.00</td>
+                                <td>1,640,250,000</td>
+                                <td>2.6%</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-cr">信用-标准 (CRQ)</span></td>
+                                <td>10.00%</td>
+                                <td>230,000.00</td>
+                                <td>529,000,000</td>
+                                <td>0.8%</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-co">商品 (CO)</span></td>
+                                <td>18.00%</td>
+                                <td>84,000.00</td>
+                                <td>228,614,400</td>
+                                <td>0.4%</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-ir">利率 (IR)</span></td>
+                                <td>1.50%</td>
+                                <td>-385,000.00</td>
+                                <td>33,350,625</td>
+                                <td>0.05%</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-fx">外汇 (FX)</span></td>
+                                <td>8.00%</td>
+                                <td>41,000.01</td>
+                                <td>10,758,405</td>
+                                <td>0.02%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p style="margin-top: 12px; font-size: 0.85em; color: #6c757d;">
+                        💡 完整运行日志和JSON数据见 <code>reports/</code> 目录：
+                        <a href="reports/real_run_demo.json" target="_blank">real_run_demo.json</a> | 
+                        <a href="reports/real_run_demo.md" target="_blank">real_run_demo.md</a>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Try It -->
+            <div class="section">
+                <h2>🚀 动手实践</h2>
+                <div class="highlight">
+                    <p><strong>运行Python演示：</strong></p>
+                    <div class="formula" style="margin-top: 10px;">$ python3 demo.py</div>
+                    <p style="margin-top: 15px;">该演示程序将读取 <code>sample_data.csv</code> 中的示例交易数据，执行SIMM简化计算流程，输出各风险类别的方差和最终RCA。</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>SIMM 教学演示 v3.0 (Round 9) | 简化版用于教育目的</p>
+            <p style="margin-top: 8px; font-size: 0.85em;">实际SIMM规范请参考 <a href="https://www.isda.org/book/ism/" target="_blank">ISDA 官方文档</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // Round 9: 输入验证工具函数
+        function validateInput(inputId, fieldName) {
+            const input = document.getElementById(inputId);
+            const value = input.value.trim();
+            const errorEl = document.getElementById(inputId + 'Error');
+            
+            // 检查是否为空
+            if (value === '') {
+                showError(input, errorEl, `${fieldName}不能为空`);
+                return null;
+            }
+            
+            // 解析为数字
+            const num = parseFloat(value);
+            
+            // 检查是否为有效数字
+            if (isNaN(num)) {
+                showError(input, errorEl, `${fieldName}必须是有效数字`);
+                return null;
+            }
+            
+            // 检查是否为无穷大
+            if (!isFinite(num)) {
+                showError(input, errorEl, `${fieldName}不能是无穷大`);
+                return null;
+            }
+            
+            // 检查范围（敏感度不能过大，避免溢出）
+            if (Math.abs(num) > 1e15) {
+                showError(input, errorEl, `${fieldName}数值过大`);
+                return null;
+            }
+            
+            // 清除错误状态
+            clearError(input, errorEl);
+            return num;
+        }
+        
+        function showError(input, errorEl, message) {
+            input.style.borderColor = '#ef4444';
+            input.classList.add('error');
+            if (errorEl) {
+                errorEl.textContent = message;
+                errorEl.style.display = 'block';
+            }
+        }
+        
+        function clearError(input, errorEl) {
+            input.style.borderColor = '#334155';
+            input.classList.remove('error');
+            if (errorEl) {
+                errorEl.textContent = '';
+                errorEl.style.display = 'none';
+            }
+        }
+        
+        function clearAllErrors() {
+            const inputs = ['irSens', 'fxSens', 'eqSens', 'crqSens', 'crnqSens', 'coSens'];
+            inputs.forEach(id => {
+                const input = document.getElementById(id);
+                const errorEl = document.getElementById(id + 'Error');
+                clearError(input, errorEl);
+            });
+        }
+        
+        // Round 9: 带验证的计算函数
+        function calculateDemo() {
+            clearAllErrors();
+            
+            // 验证并获取所有输入
+            const irSens = validateInput('irSens', '利率敏感度');
+            const fxSens = validateInput('fxSens', '外汇敏感度');
+            const eqSens = validateInput('eqSens', '股票敏感度');
+            const crqSens = validateInput('crqSens', '信用-标准敏感度');
+            const crnqSens = validateInput('crnqSens', '信用-非标准敏感度');
+            const coSens = validateInput('coSens', '商品敏感度');
+            
+            const resultEl = document.getElementById('rcaResult');
+            const breakdownEl = document.getElementById('breakdown');
+            const riskBarEl = document.getElementById('riskBar');
+            
+            // 如果有任何验证失败，显示错误并停止计算
+            const values = [irSens, fxSens, eqSens, crqSens, crnqSens, coSens];
+            if (values.some(v => v === null)) {
+                resultEl.textContent = '输入错误';
+                resultEl.classList.add('error');
+                breakdownEl.textContent = '请修正红色标记的输入项';
+                riskBarEl.style.width = '0%';
+                return;
+            }
+            
+            // 恢复结果显示颜色
+            resultEl.classList.remove('error');
+            
+            const rw = {
+                IR: 0.015,
+                FX: 0.08,
+                EQ: 0.20,
+                CRQ: 0.10,
+                CRNQ: 0.30,
+                CO: 0.18
+            };
+            
+            // 使用绝对值
+            const sens = {
+                IR: Math.abs(irSens),
+                FX: Math.abs(fxSens),
+                EQ: Math.abs(eqSens),
+                CRQ: Math.abs(crqSens),
+                CRNQ: Math.abs(crnqSens),
+                CO: Math.abs(coSens)
+            };
+            
+            // 计算方差
+            const variance = {};
+            for (let k in sens) {
+                variance[k] = Math.pow(rw[k] * sens[k], 2);
+            }
+            
+            // 简化RCA计算
+            const totalVar = Object.values(variance).reduce((a, b) => a + b, 0);
+            
+            // Round 9: 检查结果有效性
+            if (!isFinite(totalVar) || totalVar < 0) {
+                resultEl.textContent = '计算错误';
+                resultEl.classList.add('error');
+                breakdownEl.textContent = '输入数值导致计算溢出';
+                return;
+            }
+            
+            const rca = Math.sqrt(totalVar);
+            
+            // 检查RCA有效性
+            if (!isFinite(rca)) {
+                resultEl.textContent = '计算错误';
+                resultEl.classList.add('error');
+                breakdownEl.textContent = '结果无效，请检查输入';
+                return;
+            }
+            
+            // 更新显示
+            resultEl.textContent = rca.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            
+            // 风险贡献分解
+            const total = Object.values(variance).reduce((a, b) => a + b, 0);
+            const breakdown = Object.entries(variance)
+                .filter(([k, v]) => v > 0)
+                .map(([k, v]) => `${k}: ${Math.round(v/total*100)}%`)
+                .join(' | ');
+            breakdownEl.textContent = breakdown || '-';
+            
+            // 进度条
+            const maxRCA = 50000;
+            const progress = Math.min((rca / maxRCA) * 100, 100);
+            riskBarEl.style.width = progress + '%';
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            calculateDemo();
+        });
+    </script>
+</body>
+</html>

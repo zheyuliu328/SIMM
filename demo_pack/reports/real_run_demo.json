@@ -1,0 +1,108 @@
+{
+  "run_metadata": {
+    "timestamp": "2026-02-25T11:36:58.463032",
+    "source_file": "sample_data.csv",
+    "demo_version": "3.0 (Round 9 Production Ready)",
+    "python_script": "demo.py",
+    "data_source_note": "数据来自真实运行而非手填"
+  },
+  "parameter_version": {
+    "version": "2.5.0-community",
+    "effective_date": "2024-04-01",
+    "source_document": "ISDA SIMM 2.5 Methodology",
+    "source_url": "https://www.isda.org/book/ism/",
+    "risk_weight_source": "ISDA SIMM 2.5 Table 1-6 (Simplified for Demo)",
+    "correlation_source": "ISDA SIMM 2.5 Cross-Risk Class Correlation Matrix (Simplified)",
+    "generated_at": "2026-02-25T11:36:58.463030"
+  },
+  "calculation_results": {
+    "rca": 249599.62549876233,
+    "trade_count": 26,
+    "total_notional": 237800000.0,
+    "margin_ratio": 0.10496199558400435,
+    "credit_risk_contribution_pct": 4.537138326967437
+  },
+  "variances_by_risk_class": {
+    "Commodity": 228614400.0,
+    "CreditNonQualifying": 1640250000.0,
+    "CreditQualifying": 529000000.0,
+    "Equity": 45369000000.0,
+    "FX": 10758405.248000642,
+    "InterestRate": 33350625.0
+  },
+  "calculation_log": {
+    "timestamp": "2026-02-25T11:36:58.462182",
+    "steps": [
+      {
+        "step": "data_load",
+        "timestamp": "2026-02-25T11:36:58.462798",
+        "details": {
+          "total_trades": 26,
+          "skipped": 0,
+          "total_notional": 237800000.0,
+          "credit_qualified": 5,
+          "credit_non_qualified": 5,
+          "chunks_processed": 0,
+          "encoding": "utf-8-sig"
+        }
+      },
+      {
+        "step": "aggregation",
+        "timestamp": "2026-02-25T11:36:58.462876",
+        "details": {
+          "buckets": {
+            "Commodity": {
+              "trades": 3,
+              "sensitivity": 84000.0
+            },
+            "CreditNonQualifying": {
+              "trades": 5,
+              "sensitivity": 135000.0
+            },
+            "CreditQualifying": {
+              "trades": 5,
+              "sensitivity": 230000.0
+            },
+            "Equity": {
+              "trades": 4,
+              "sensitivity": 1065000.0
+            },
+            "FX": {
+              "trades": 4,
+              "sensitivity": 41000.01
+            },
+            "InterestRate": {
+              "trades": 5,
+              "sensitivity": -385000.0
+            }
+          }
+        }
+      },
+      {
+        "step": "variance",
+        "timestamp": "2026-02-25T11:36:58.462931",
+        "details": {
+          "variances": {
+            "Commodity": 228614400.0,
+            "CreditNonQualifying": 1640250000.0,
+            "CreditQualifying": 529000000.0,
+            "Equity": 45369000000.0,
+            "FX": 10758405.248000642,
+            "InterestRate": 33350625.0
+          }
+        }
+      },
+      {
+        "step": "rca",
+        "timestamp": "2026-02-25T11:36:58.462960",
+        "details": {
+          "total_variance": 62299973049.122406,
+          "rca": 249599.62549876233
+        }
+      }
+    ],
+    "warnings": [],
+    "errors": []
+  },
+  "status": "success"
+}
