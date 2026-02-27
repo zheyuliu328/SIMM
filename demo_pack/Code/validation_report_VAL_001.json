@@ -1,0 +1,72 @@
+{
+  "report_date": "2026-02-27T10:54:32.309945",
+  "total_trades": 1,
+  "summary": {
+    "total_trades": 1,
+    "total_checks": 4,
+    "total_passed": 0,
+    "total_failed": 4,
+    "total_warnings": 0,
+    "pass_rate": 0.0,
+    "overall_status": "FAIL"
+  },
+  "trades": [
+    {
+      "trade_id": "VAL_001",
+      "product_type": "FX_Vanilla_Option",
+      "notional": 10000000,
+      "currency": "EUR",
+      "validation_date": "2026-02-27T10:54:32.308942",
+      "summary": {
+        "trade_id": "VAL_001",
+        "total_checks": 4,
+        "passed": 0,
+        "failed": 4,
+        "warnings": 0,
+        "overall_status": "FAIL"
+      },
+      "results": [
+        {
+          "check_name": "Total SIMM Margin",
+          "sp_value": 2650000,
+          "challenger_value": 384624.6904213533,
+          "variance": -2265375.309578647,
+          "variance_pct": -85.48586073881687,
+          "tolerance_pct": 1.0,
+          "status": "FAIL",
+          "details": "Variance exceeds tolerance (1.0%)"
+        },
+        {
+          "check_name": "Delta Margin",
+          "sp_value": 2100000,
+          "challenger_value": 384621.55406168435,
+          "variance": -1715378.4459383157,
+          "variance_pct": -81.68468790182456,
+          "tolerance_pct": 1.0,
+          "status": "FAIL",
+          "details": "Component: Delta Margin"
+        },
+        {
+          "check_name": "Vega Margin",
+          "sp_value": 850000,
+          "challenger_value": 1517.2763234826368,
+          "variance": -848482.7236765174,
+          "variance_pct": -99.8214969031197,
+          "tolerance_pct": 1.0,
+          "status": "FAIL",
+          "details": "Component: Vega Margin"
+        },
+        {
+          "check_name": "Curvature Margin",
+          "sp_value": 320000,
+          "challenger_value": 332.4236076487781,
+          "variance": -319667.57639235124,
+          "variance_pct": -99.89611762260976,
+          "tolerance_pct": 1.0,
+          "status": "FAIL",
+          "details": "Component: Curvature Margin"
+        }
+      ]
+    }
+  ]
+}
